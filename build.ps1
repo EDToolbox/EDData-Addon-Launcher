@@ -22,7 +22,7 @@ Typ des Builds: Debug oder Release (Default: Release)
 param(
     [ValidateSet("Debug", "Release")]
     [string]$BuildType = "Release",
-    
+
     [switch]$NoPublish,
     [switch]$NoInstaller,
     [switch]$Help
@@ -136,32 +136,32 @@ if (-not $NoPublish) {
 
 if (-not $NoInstaller) {
     Write-Info "NSIS Installer wird erzeugt..."
-    
+
     # Prüfe ob NSIS installiert ist
     $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
     if (-not (Test-Path $nsisPath)) {
         $nsisPath = "C:\Program Files\NSIS\makensis.exe"
     }
-    
+
     if (-not (Test-Path $nsisPath)) {
         Write-Error "NSIS nicht gefunden! Installiere NSIS von: https://nsis.sourceforge.io/"
         Write-Warning "Prüfe auch manuell: C:\Program Files (x86)\NSIS oder C:\Program Files\NSIS"
         exit 1
     }
-    
+
     if (-not (Test-Path "installer/installer.nsi")) {
         Write-Error "installer/installer.nsi nicht gefunden!"
         exit 1
     }
-    
+
     Write-Info "Starte NSIS: $nsisPath"
     & $nsisPath "installer/installer.nsi"
-    
+
     if ($LASTEXITCODE -ne 0) {
         Write-Error "NSIS Installer-Erstellung fehlgeschlagen!"
         exit 1
     }
-    
+
     if (Test-Path "Elite-Dangerous-Addon-Launcher-Setup.exe") {
         Write-Success "Installer erstellt: Elite-Dangerous-Addon-Launcher-Setup.exe"
     } else {
