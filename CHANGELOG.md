@@ -7,7 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-rc.1] - 2025-11-24
+
 ### Added
+- GitHub Actions CI/CD release pipeline with automated builds and installer generation
+- NSIS installer with professional UI:
+  - License display during installation
+  - Custom installation directory selection
+  - Start menu and desktop shortcuts
+  - Automatic uninstaller registration
+- PowerShell automation scripts:
+  - `build.ps1` - Local build with optional NSIS installer generation
+  - `release.ps1` - Automated release management with version tagging
+- Comprehensive documentation:
+  - `RELEASE_GUIDE.md` - Step-by-step release procedures
+  - `CI_CD.md` - CI/CD pipeline architecture and troubleshooting
+  - `QUICKSTART.md` - Quick reference for common development tasks
+  - `INSTALLER_README.md` - NSIS installer configuration guide
+
+### Security
+- Implemented 8 critical security fixes:
+  - Process execution hardening (UseShellExecute=false)
+  - JSON deserialization security (TypeNameHandling.None)
+  - Path traversal protection with validation methods
+  - URL protocol whitelist validation
+  - File size validation (1MB manifest limit)
+  - Comprehensive exception handling throughout codebase
+  - Profile and settings import validation
+
+### Fixed
+- Eliminated all 130 compiler warnings in Debug build configuration
+- Field initialization warnings (string fields → string.Empty)
+- Nullable event handler warnings (PropertyChangedEventHandler?)
+- Null reference analysis warnings in UI components
+
+## [2.0.0-beta.1] - 2025-11-20
+
+### Added
+- Comprehensive security audit report documenting 12 identified vulnerabilities
+- Performance optimizations for Epic Games installation detection
+- Thread-safe process list management
+- Epic install cache with locking mechanism
+
+### Changed
 - Epic Games installation cache to prevent repeated manifest scanning
 - Thread-safe process list management with lock object (`_processListLock`)
 - Static Epic install cache with thread-safe locking (`_epicInstallCache`, `_epicCacheLock`)
