@@ -33,15 +33,29 @@ jobs:
         run: dotnet publish --configuration Release --output ./publish --no-build
 
       - name: Install NSIS
-        uses: repolevedavaj/install-nsis@v1.0.1
-        with:
-          nsis-version: '3.10'
+        run: |
+          Write-Host "Installing NSIS via Chocolatey..."
+          choco install nsis -y
+          Write-Host "✓ NSIS installed"
+          
+          # Verify installation
+          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (Test-Path $nsisPath) {
+            Write-Host "✓ makensis.exe found at: $nsisPath"
+          } else {
+            Write-Error "NSIS installation failed - makensis.exe not found"
+            exit 1
+          }
 
       - name: Build NSIS Installer
-        uses: joncloud/makensis-action@v5.0
-        with:
-          script-file: installer/installer.nsi
-          arguments: "/V3"
+        run: |
+          Write-Host "Building NSIS installer..."
+          & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 installer/installer.nsi
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "NSIS build failed with exit code $LASTEXITCODE"
+            exit 1
+          }
 
       - name: Verify installer
         run: |
