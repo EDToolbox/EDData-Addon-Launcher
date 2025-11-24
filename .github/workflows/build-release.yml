@@ -23,14 +23,17 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Verify .NET version
+        run: dotnet --version
+
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore "Elite Dangerous Addon Launcher V2.csproj"
 
       - name: Build project
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --no-restore
 
       - name: Publish project
-        run: dotnet publish --configuration Release --output ./publish --no-build
+        run: dotnet publish "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --output ./publish --no-build
 
       - name: Install NSIS
         run: |
