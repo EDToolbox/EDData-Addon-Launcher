@@ -42,6 +42,7 @@ jobs:
         run: |
           Write-Host "Installing WiX Toolset v6..."
           dotnet tool install --global wix --version 6.0.2
+          wix extension add WixToolset.UI.wixext
           wix --version
           Write-Host "✓ WiX installed"
 
@@ -57,7 +58,6 @@ jobs:
           wix build installer\Package.wxs `
             -arch x64 `
             -d PublishDir="$publishDir" `
-            -ext WixToolset.UI.wixext `
             -out "Elite-Dangerous-Addon-Launcher-$version.msi"
           
           if ($LASTEXITCODE -ne 0) {
