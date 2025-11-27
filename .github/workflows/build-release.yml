@@ -38,61 +38,44 @@ jobs:
       - name: Publish project
         run: dotnet publish "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --output ./publish --self-contained true --runtime win-x64 --no-build
 
-      - name: Create MSIX package
+      - name: Install WiX Toolset
         run: |
-          Write-Host "Creating MSIX package..."
+          Write-Host "Installing WiX Toolset v5..."
+          dotnet tool install --global wix --version 5.0.2
+          wix --version
+          Write-Host "✓ WiX installed"
 
-          # Find makeappx.exe in Windows SDK
-          $sdkPath = "C:\Program Files (x86)\Windows Kits\10\bin"
-          $makeappx = Get-ChildItem -Path $sdkPath -Filter "makeappx.exe" -Recurse -ErrorAction SilentlyContinue |
-                      Where-Object { $_.FullName -match "x64" } |
-                      Select-Object -First 1
-
-          if (-not $makeappx) {
-            Write-Error "makeappx.exe not found in Windows SDK"
-            exit 1
-          }
-
-          Write-Host "Found makeappx: $($makeappx.FullName)"
-
-          # Create package directory structure
-          $packageDir = "msix-package"
-          New-Item -ItemType Directory -Force -Path $packageDir
-
-          # Copy published files
-          Copy-Item -Path "publish\*" -Destination $packageDir -Recurse -Force
-
-          # Copy manifest (MSIX requires AppxManifest.xml in root)
-          Copy-Item -Path "AppxManifest.xml" -Destination $packageDir -Force
-
-          # Copy assets
-          Copy-Item -Path "Assets" -Destination $packageDir -Recurse -Force
-
-          # Create MSIX using makeappx
+      - name: Build MSI Installer
+        run: |
+          Write-Host "Building MSI installer with WiX..."
+          
           $version = "${{ github.ref_name }}".TrimStart('v')
-          $msixPath = "Elite-Dangerous-Addon-Launcher-$version.msix"
-
-          & $makeappx.FullName pack /d $packageDir /p $msixPath /nv
-
+          $publishDir = (Resolve-Path "publish").Path
+          
+          # Build the MSI
+          wix build installer\Package.wxs `
+            -arch x64 `
+            -define PublishDir="$publishDir" `
+            -define Version="$version" `
+            -out "Elite-Dangerous-Addon-Launcher-$version.msi"
+          
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "MSIX build failed with exit code $LASTEXITCODE"
+            Write-Error "WiX build failed with exit code $LASTEXITCODE"
             exit 1
           }
+          
+          Write-Host "✓ MSI installer created successfully"
 
-          Write-Host "✓ MSIX package created: $msixPath"
-
-      - name: Verify package
+      - name: Verify installer
         run: |
           $version = "${{ github.ref_name }}".TrimStart('v')
-          $msixPath = "Elite-Dangerous-Addon-Launcher-$version.msix"
-          if (-not (Test-Path $msixPath)) {
-            Write-Error "MSIX package not found at $msixPath"
+          $msiPath = "Elite-Dangerous-Addon-Launcher-$version.msi"
+          if (-not (Test-Path $msiPath)) {
+            Write-Error "MSI installer not found at $msiPath"
             exit 1
           }
-          $size = (Get-Item $msixPath).Length / 1MB
-          Write-Host "✓ Package verified: $msixPath ($([math]::Round($size, 2)) MB)"
-
-      - name: Determine Release Type
+          $size = (Get-Item $msiPath).Length / 1MB
+          Write-Host "✓ Installer verified: $msiPath ($([math]::Round($size, 2)) MB)"      - name: Determine Release Type
         id: release_type
         run: |
           $tag = "${{ github.ref }}" -replace 'refs/tags/', ''
@@ -107,7 +90,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            Elite-Dangerous-Addon-Launcher-*.msix
+            Elite-Dangerous-Addon-Launcher-*.msi
             LICENCE.md
           body_path: CHANGELOG.md
           prerelease: ${{ steps.release_type.outputs.is_prerelease == 'true' }}
@@ -118,5 +101,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: msix-package
-          path: Elite-Dangerous-Addon-Launcher-*.msix
+          name: msi-installer
+          path: Elite-Dangerous-Addon-Launcher-*.msi
