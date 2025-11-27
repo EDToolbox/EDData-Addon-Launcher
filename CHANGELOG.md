@@ -187,10 +187,10 @@ Added 35+ application constants:
 - **Internationalization**: Ready for future localization (all strings English)
 
 ### Dependencies
-- .NET 8.0 (LTS, supported until November 2026)
+- .NET 10.0 LTS (supported until November 2028)
 - MaterialDesignThemes v5.2.1
 - Newtonsoft.Json v13.0.3
-- Serilog v4.2.0 with File and Console sinks v6.0.0
+- Serilog v4.3.0 with File and Console sinks v6.0.0
 - gong-wpf-dragdrop v4.0.0
 
 ### Breaking Changes
