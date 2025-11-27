@@ -38,18 +38,18 @@ jobs:
       - name: Create MSIX package
         run: |
           Write-Host "Creating MSIX package..."
-          
+
           # Find makeappx.exe in Windows SDK
           $sdkPath = "C:\Program Files (x86)\Windows Kits\10\bin"
-          $makeappx = Get-ChildItem -Path $sdkPath -Filter "makeappx.exe" -Recurse -ErrorAction SilentlyContinue | 
-                      Where-Object { $_.FullName -match "x64" } | 
+          $makeappx = Get-ChildItem -Path $sdkPath -Filter "makeappx.exe" -Recurse -ErrorAction SilentlyContinue |
+                      Where-Object { $_.FullName -match "x64" } |
                       Select-Object -First 1
-          
+
           if (-not $makeappx) {
             Write-Error "makeappx.exe not found in Windows SDK"
             exit 1
           }
-          
+
           Write-Host "Found makeappx: $($makeappx.FullName)"
 
           # Create package directory structure
@@ -59,8 +59,8 @@ jobs:
           # Copy published files
           Copy-Item -Path "publish\*" -Destination $packageDir -Recurse -Force
 
-          # Copy manifest
-          Copy-Item -Path "Package.appxmanifest" -Destination $packageDir -Force
+          # Copy manifest (MSIX requires AppxManifest.xml in root)
+          Copy-Item -Path "AppxManifest.xml" -Destination $packageDir -Force
 
           # Copy assets
           Copy-Item -Path "Assets" -Destination $packageDir -Recurse -Force

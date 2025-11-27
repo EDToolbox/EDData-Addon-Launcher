@@ -48,25 +48,25 @@ RequestExecutionLevel admin
 
 Section "Elite Dangerous Addon Launcher V2"
     SectionIn RO
-    
+
     SetOutPath "$INSTDIR"
-    
+
     ; Kopiere alle Dateien aus dem publish-Verzeichnis
     File /r "publish\*.*"
-    
+
     ; Erstelle Startmenü-Einträge
     CreateDirectory "$SMPROGRAMS\Elite Dangerous Addon Launcher V2"
     CreateShortCut "$SMPROGRAMS\Elite Dangerous Addon Launcher V2\Elite Dangerous Addon Launcher.lnk" "$INSTDIR\Elite Dangerous Addon Launcher V2.exe"
     CreateShortCut "$SMPROGRAMS\Elite Dangerous Addon Launcher V2\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-    
+
     ; Erstelle Desktop-Verknüpfung (optional)
     CreateShortCut "$DESKTOP\Elite Dangerous Addon Launcher.lnk" "$INSTDIR\Elite Dangerous Addon Launcher V2.exe"
-    
+
     ; Speichere Installationspfad in Registry
     WriteRegStr HKCU "Software\Elite Dangerous Addon Launcher V2" "" "$INSTDIR"
     WriteRegStr HKCU "Software\Elite Dangerous Addon Launcher V2" "Version" "2.0.0"
     WriteRegStr HKCU "Software\Elite Dangerous Addon Launcher V2" "InstallDate" "$%DATE%"
-    
+
     ; Erstelle Uninstall-Registry-Einträge
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2" "DisplayName" "Elite Dangerous Addon Launcher V2"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2" "DisplayVersion" "2.0.0"
@@ -75,38 +75,38 @@ Section "Elite Dangerous Addon Launcher V2"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2" "DisplayIcon" "$INSTDIR\Elite Dangerous Addon Launcher V2.exe"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2" "Publisher" "EDToolbox"
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2" "URLInfoAbout" "https://github.com/EDToolbox/Elite-Dangerous-Addon-Launcher-V2"
-    
+
     ; Schreibe Uninstall-Programm
     WriteUninstaller "$INSTDIR\uninstall.exe"
-    
+
 SectionEnd
 
 ; ==================== Uninstaller-Sektion ====================
 
 Section "Uninstall"
-    
+
     ; Entferne Startmenü-Einträge
     Delete "$SMPROGRAMS\Elite Dangerous Addon Launcher V2\Elite Dangerous Addon Launcher.lnk"
     Delete "$SMPROGRAMS\Elite Dangerous Addon Launcher V2\Uninstall.lnk"
     RMDir "$SMPROGRAMS\Elite Dangerous Addon Launcher V2"
-    
+
     ; Entferne Desktop-Verknüpfung
     Delete "$DESKTOP\Elite Dangerous Addon Launcher.lnk"
-    
+
     ; Entferne Installationsdateien
     RMDir /r "$INSTDIR\*.*"
     RMDir "$INSTDIR"
-    
+
     ; Entferne Registry-Einträge
     DeleteRegKey HKCU "Software\Elite Dangerous Addon Launcher V2"
     DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\Elite Dangerous Addon Launcher V2"
-    
+
 SectionEnd
 
 ; ==================== Funktionen ====================
 
 Function .onInit
-    
+
     ; Überprüfe ob bereits installiert
     ReadRegStr $0 HKCU "Software\Elite Dangerous Addon Launcher V2" ""
     ${If} $0 != ""
@@ -114,14 +114,14 @@ Function .onInit
         Abort
         proceed:
     ${EndIf}
-    
+
 FunctionEnd
 
 Function un.onInit
-    
+
     MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Möchten Sie Elite Dangerous Addon Launcher V2 deinstallieren?" IDYES +2
     Abort
-    
+
 FunctionEnd
 
 Function un.onUninstSuccess
