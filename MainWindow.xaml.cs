@@ -1283,6 +1283,82 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
         #endregion Steam Detection
 
+        #region Epic Games Detection
+
+        /// <summary>
+        /// Searches for Elite Dangerous in Epic Games Store installations.
+        /// Parses manifest files in C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests
+        /// </summary>
+        private static string? FindEliteInEpicLibrary()
+        {
+            const string manifestDir = @"C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests";
+            
+            if (!Directory.Exists(manifestDir))
+            {
+                Log.Information("Epic Games manifest directory not found");
+                return null;
+            }
+
+            Log.Information("Searching Epic Games manifests...");
+
+            foreach (var file in Directory.GetFiles(manifestDir, "*.item"))
+            {
+                try
+                {
+                    // Validate file size before reading (Security)
+                    const long MAX_MANIFEST_SIZE = 1 * 1024 * 1024; // 1MB
+                    var fileInfo = new FileInfo(file);
+                    if (fileInfo.Length > MAX_MANIFEST_SIZE)
+                    {
+                        continue;
+                    }
+
+                    var json = File.ReadAllText(file);
+                    var manifest = JObject.Parse(json);
+                    
+                    string? displayName = manifest["DisplayName"]?.ToString();
+                    string? installLocation = manifest["InstallLocation"]?.ToString();
+                    string? launchExe = manifest["LaunchExecutable"]?.ToString();
+
+                    // Check if this is Elite Dangerous
+                    if (!string.IsNullOrEmpty(displayName) && 
+                        displayName.Contains("Elite Dangerous", StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrEmpty(installLocation) &&
+                        !string.IsNullOrEmpty(launchExe))
+                    {
+                        // Look for EDLaunch.exe in the install location
+                        var edLaunchPath = Path.Combine(installLocation, AppConstants.EdLaunchExe);
+                        if (File.Exists(edLaunchPath))
+                        {
+                            Log.Information("Found Elite Dangerous via Epic Games: {Path}", edLaunchPath);
+                            return edLaunchPath;
+                        }
+
+                        // Also check subdirectories (some games have nested structures)
+                        var subDirPath = Path.Combine(installLocation, "Elite Dangerous", AppConstants.EdLaunchExe);
+                        if (File.Exists(subDirPath))
+                        {
+                            Log.Information("Found Elite Dangerous via Epic Games (subdirectory): {Path}", subDirPath);
+                            return subDirPath;
+                        }
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Log.Warning("Invalid JSON in Epic manifest {file}: {message}", file, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Error reading Epic manifest {file}", file);
+                }
+            }
+
+            Log.Information("Elite Dangerous not found in Epic Games library");
+            return null;
+        }
+
+        #endregion Epic Games Detection
+
         public static async Task<List<string>> ScanComputerForEdLaunch()
         {
             List<string> foundPaths = new List<string>();
@@ -1297,8 +1373,18 @@ namespace Elite_Dangerous_Addon_Launcher_V2
                 return foundPaths;
             }
 
-            // Steam detection failed, fall back to full scan
-            Log.Information("Steam detection failed, starting full disk scan...");
+            // Second, try Epic Games detection (fast)
+            Log.Information("Attempting Epic Games detection...");
+            var epicPath = FindEliteInEpicLibrary();
+            if (!string.IsNullOrEmpty(epicPath))
+            {
+                foundPaths.Add(epicPath);
+                Log.Information("Elite Dangerous found via Epic Games detection: {Path}", epicPath);
+                return foundPaths;
+            }
+
+            // Both failed, fall back to full scan
+            Log.Information("Steam and Epic detection failed, starting full disk scan...");
             
             string targetFolder = "Elite Dangerous";
             string targetFile = AppConstants.EdLaunchExe;
