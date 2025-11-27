@@ -5,11 +5,21 @@
   <Package Name="Elite Dangerous Addon Launcher V2"
            Manufacturer="EDToolbox"
            Version="!(bind.FileVersion.MainExeFile)"
-           UpgradeCode="A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D">
+           UpgradeCode="7E8F9A0B-1C2D-4E5F-A6B7-C8D9E0F1A2B3">
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+    <!-- Upgrade detection - removes previous versions before installing new one -->
+    <MajorUpgrade 
+        DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+        AllowSameVersionUpgrades="yes"
+        Schedule="afterInstallInitialize" />
 
-    <MediaTemplate EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Add/Remove Programs properties -->
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/EDToolbox/Elite-Dangerous-Addon-Launcher-V2" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/EDToolbox/Elite-Dangerous-Addon-Launcher-V2/releases" />
+    <Property Id="ARPCONTACT" Value="EDToolbox" />
+    <Property Id="ARPCOMMENTS" Value="Launch and manage Elite Dangerous addons" />
 
     <!-- Installation directory -->
     <StandardDirectory Id="ProgramFiles6432Folder">
