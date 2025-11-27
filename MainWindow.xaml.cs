@@ -1133,9 +1133,173 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
         #endregion Private Methods
 
+        #region Steam Detection
+
+        /// <summary>
+        /// Gets the Steam installation path from the Windows Registry.
+        /// </summary>
+        private static string? GetSteamPath()
+        {
+            try
+            {
+                // Try 64-bit registry first
+                using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\WOW6432Node\Valve\Steam");
+                if (key?.GetValue("InstallPath") is string path && Directory.Exists(path))
+                {
+                    Log.Information("Found Steam path from registry (64-bit): {Path}", path);
+                    return path;
+                }
+
+                // Try 32-bit registry
+                using var key32 = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Valve\Steam");
+                if (key32?.GetValue("InstallPath") is string path32 && Directory.Exists(path32))
+                {
+                    Log.Information("Found Steam path from registry (32-bit): {Path}", path32);
+                    return path32;
+                }
+
+                // Try current user registry
+                using var keyUser = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Valve\Steam");
+                if (keyUser?.GetValue("SteamPath") is string pathUser && Directory.Exists(pathUser))
+                {
+                    Log.Information("Found Steam path from user registry: {Path}", pathUser);
+                    return pathUser;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to read Steam path from registry");
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Parses Steam's libraryfolders.vdf to get all Steam library paths.
+        /// </summary>
+        private static List<string> GetSteamLibraryFolders(string steamPath)
+        {
+            var libraries = new List<string> { steamPath };
+            var vdfPath = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf");
+
+            if (!File.Exists(vdfPath))
+            {
+                Log.Warning("Steam libraryfolders.vdf not found at: {Path}", vdfPath);
+                return libraries;
+            }
+
+            try
+            {
+                var content = File.ReadAllText(vdfPath);
+                
+                // Parse VDF format - look for "path" entries
+                // Format: "path"		"D:\\SteamLibrary"
+                var pathPattern = new System.Text.RegularExpressions.Regex(
+                    "\"path\"\\s*\"([^\"]+)\"",
+                    System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                foreach (System.Text.RegularExpressions.Match match in pathPattern.Matches(content))
+                {
+                    var libraryPath = match.Groups[1].Value.Replace("\\\\", "\\");
+                    if (Directory.Exists(libraryPath) && !libraries.Contains(libraryPath, StringComparer.OrdinalIgnoreCase))
+                    {
+                        libraries.Add(libraryPath);
+                        Log.Information("Found Steam library folder: {Path}", libraryPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to parse Steam libraryfolders.vdf");
+            }
+
+            return libraries;
+        }
+
+        /// <summary>
+        /// Searches for Elite Dangerous in all Steam library folders.
+        /// Elite Dangerous Steam App ID: 359320
+        /// </summary>
+        private static string? FindEliteInSteamLibraries()
+        {
+            var steamPath = GetSteamPath();
+            if (string.IsNullOrEmpty(steamPath))
+            {
+                Log.Information("Steam not found on this system");
+                return null;
+            }
+
+            var libraries = GetSteamLibraryFolders(steamPath);
+            const string eliteAppId = "359320";
+            
+            foreach (var library in libraries)
+            {
+                // Check for Elite Dangerous app manifest
+                var manifestPath = Path.Combine(library, "steamapps", $"appmanifest_{eliteAppId}.acf");
+                if (File.Exists(manifestPath))
+                {
+                    Log.Information("Found Elite Dangerous manifest: {Path}", manifestPath);
+                    
+                    // Parse manifest to get install directory
+                    try
+                    {
+                        var manifestContent = File.ReadAllText(manifestPath);
+                        var installDirPattern = new System.Text.RegularExpressions.Regex(
+                            "\"installdir\"\\s*\"([^\"]+)\"",
+                            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                        
+                        var match = installDirPattern.Match(manifestContent);
+                        if (match.Success)
+                        {
+                            var installDir = match.Groups[1].Value;
+                            var fullPath = Path.Combine(library, "steamapps", "common", installDir);
+                            var edLaunchPath = Path.Combine(fullPath, AppConstants.EdLaunchExe);
+                            
+                            if (File.Exists(edLaunchPath))
+                            {
+                                Log.Information("Found Elite Dangerous via Steam: {Path}", edLaunchPath);
+                                return edLaunchPath;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Warning(ex, "Failed to parse Elite Dangerous manifest");
+                    }
+                }
+
+                // Fallback: Check common install location directly
+                var commonPath = Path.Combine(library, "steamapps", "common", "Elite Dangerous", AppConstants.EdLaunchExe);
+                if (File.Exists(commonPath))
+                {
+                    Log.Information("Found Elite Dangerous via direct path: {Path}", commonPath);
+                    return commonPath;
+                }
+            }
+
+            Log.Information("Elite Dangerous not found in any Steam library");
+            return null;
+        }
+
+        #endregion Steam Detection
+
         public static async Task<List<string>> ScanComputerForEdLaunch()
         {
             List<string> foundPaths = new List<string>();
+            
+            // First, try Steam detection (fast)
+            Log.Information("Attempting Steam library detection...");
+            var steamPath = FindEliteInSteamLibraries();
+            if (!string.IsNullOrEmpty(steamPath))
+            {
+                foundPaths.Add(steamPath);
+                Log.Information("Elite Dangerous found via Steam detection: {Path}", steamPath);
+                return foundPaths;
+            }
+
+            // Steam detection failed, fall back to full scan
+            Log.Information("Steam detection failed, starting full disk scan...");
+            
             string targetFolder = "Elite Dangerous";
             string targetFile = AppConstants.EdLaunchExe;
             var tokenSource = new CancellationTokenSource();
