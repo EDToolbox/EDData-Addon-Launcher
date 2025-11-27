@@ -33,43 +33,48 @@ jobs:
         run: dotnet build "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --no-restore
 
       - name: Publish project
-        run: dotnet publish "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --output ./publish --no-build
+        run: dotnet publish "Elite Dangerous Addon Launcher V2.csproj" --configuration Release --output ./publish --self-contained true --runtime win-x64 --no-build
 
-      - name: Install NSIS
+      - name: Create MSIX package
         run: |
-          Write-Host "Installing NSIS via Chocolatey..."
-          choco install nsis -y
-          Write-Host "✓ NSIS installed"
-
-          # Verify installation
-          $nsisPath = "C:\Program Files (x86)\NSIS\makensis.exe"
-          if (Test-Path $nsisPath) {
-            Write-Host "✓ makensis.exe found at: $nsisPath"
-          } else {
-            Write-Error "NSIS installation failed - makensis.exe not found"
-            exit 1
-          }
-
-      - name: Build NSIS Installer
-        run: |
-          Write-Host "Building NSIS installer..."
-          & "C:\Program Files (x86)\NSIS\makensis.exe" /V3 installer/installer.nsi
-
+          Write-Host "Creating MSIX package..."
+          
+          # Create package directory structure
+          $packageDir = "msix-package"
+          New-Item -ItemType Directory -Force -Path $packageDir
+          
+          # Copy published files
+          Copy-Item -Path "publish\*" -Destination $packageDir -Recurse -Force
+          
+          # Copy manifest
+          Copy-Item -Path "Package.appxmanifest" -Destination $packageDir -Force
+          
+          # Copy assets
+          Copy-Item -Path "Assets" -Destination $packageDir -Recurse -Force
+          
+          # Create MSIX using makeappx
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $msixPath = "Elite-Dangerous-Addon-Launcher-$version.msix"
+          
+          & "C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\makeappx.exe" pack /d $packageDir /p $msixPath /nv
+          
           if ($LASTEXITCODE -ne 0) {
-            Write-Error "NSIS build failed with exit code $LASTEXITCODE"
+            Write-Error "MSIX build failed with exit code $LASTEXITCODE"
             exit 1
           }
+          
+          Write-Host "✓ MSIX package created: $msixPath"
 
-      - name: Verify installer
+      - name: Verify package
         run: |
-          if (Test-Path "installer/Elite-Dangerous-Addon-Launcher-Setup.exe") {
-            Write-Host "✓ Installer created successfully"
-            $size = (Get-Item "installer/Elite-Dangerous-Addon-Launcher-Setup.exe").Length / 1MB
-            Write-Host "Size: $([math]::Round($size, 2)) MB"
-          } else {
-            Write-Error "Installer not found!"
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          $msixPath = "Elite-Dangerous-Addon-Launcher-$version.msix"
+          if (-not (Test-Path $msixPath)) {
+            Write-Error "MSIX package not found at $msixPath"
             exit 1
           }
+          $size = (Get-Item $msixPath).Length / 1MB
+          Write-Host "✓ Package verified: $msixPath ($([math]::Round($size, 2)) MB)"
 
       - name: Determine Release Type
         id: release_type
@@ -86,7 +91,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            installer/Elite-Dangerous-Addon-Launcher-Setup.exe
+            Elite-Dangerous-Addon-Launcher-*.msix
             LICENSE.txt
           body_path: CHANGELOG.md
           prerelease: ${{ steps.release_type.outputs.is_prerelease == 'true' }}
@@ -97,5 +102,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: installer
-          path: publish/Elite-Dangerous-Addon-Launcher-Setup.exe
+          name: msix-package
+          path: Elite-Dangerous-Addon-Launcher-*.msix
