@@ -158,7 +158,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
             {
                 dropInfo.DropTargetAdorner = DropTargetAdorners.Highlight;
                 dropInfo.Effects = DragDropEffects.Move;
-              
+
                 _ = SaveProfilesAsync();
             }
         }
@@ -818,7 +818,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
             UpdateStatus("All apps launched, waiting for EDLaunch Exit..");
             this.WindowState = WindowState.Minimized;
         }
-     
+
 
         private bool IsLegendaryInstalled()
         {
@@ -1191,7 +1191,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
             try
             {
                 var content = File.ReadAllText(vdfPath);
-                
+
                 // Parse VDF format - look for "path" entries
                 // Format: "path"		"D:\\SteamLibrary"
                 var pathPattern = new System.Text.RegularExpressions.Regex(
@@ -1231,7 +1231,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
             var libraries = GetSteamLibraryFolders(steamPath);
             const string eliteAppId = "359320";
-            
+
             foreach (var library in libraries)
             {
                 // Check for Elite Dangerous app manifest
@@ -1239,7 +1239,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
                 if (File.Exists(manifestPath))
                 {
                     Log.Information("Found Elite Dangerous manifest: {Path}", manifestPath);
-                    
+
                     // Parse manifest to get install directory
                     try
                     {
@@ -1247,14 +1247,14 @@ namespace Elite_Dangerous_Addon_Launcher_V2
                         var installDirPattern = new System.Text.RegularExpressions.Regex(
                             "\"installdir\"\\s*\"([^\"]+)\"",
                             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                        
+
                         var match = installDirPattern.Match(manifestContent);
                         if (match.Success)
                         {
                             var installDir = match.Groups[1].Value;
                             var fullPath = Path.Combine(library, "steamapps", "common", installDir);
                             var edLaunchPath = Path.Combine(fullPath, AppConstants.EdLaunchExe);
-                            
+
                             if (File.Exists(edLaunchPath))
                             {
                                 Log.Information("Found Elite Dangerous via Steam: {Path}", edLaunchPath);
@@ -1292,7 +1292,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
         private static string? FindEliteInEpicLibrary()
         {
             const string manifestDir = @"C:\ProgramData\Epic\EpicGamesLauncher\Data\Manifests";
-            
+
             if (!Directory.Exists(manifestDir))
             {
                 Log.Information("Epic Games manifest directory not found");
@@ -1315,13 +1315,13 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
                     var json = File.ReadAllText(file);
                     var manifest = JObject.Parse(json);
-                    
+
                     string? displayName = manifest["DisplayName"]?.ToString();
                     string? installLocation = manifest["InstallLocation"]?.ToString();
                     string? launchExe = manifest["LaunchExecutable"]?.ToString();
 
                     // Check if this is Elite Dangerous
-                    if (!string.IsNullOrEmpty(displayName) && 
+                    if (!string.IsNullOrEmpty(displayName) &&
                         displayName.Contains("Elite Dangerous", StringComparison.OrdinalIgnoreCase) &&
                         !string.IsNullOrEmpty(installLocation) &&
                         !string.IsNullOrEmpty(launchExe))
@@ -1514,7 +1514,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
         public static async Task<List<string>> ScanComputerForEdLaunch()
         {
             List<string> foundPaths = new List<string>();
-            
+
             // First, try Steam detection (fast)
             Log.Information("Attempting Steam library detection...");
             var steamPath = FindEliteInSteamLibraries();
@@ -1547,7 +1547,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
             // All fast methods failed, fall back to full scan
             Log.Information("Steam, Epic, and Frontier detection failed, starting full disk scan...");
-            
+
             string targetFolder = "Elite Dangerous";
             string targetFile = AppConstants.EdLaunchExe;
             var tokenSource = new CancellationTokenSource();
@@ -1941,13 +1941,13 @@ namespace Elite_Dangerous_Addon_Launcher_V2
                     ConstructorHandling = ConstructorHandling.Default
                 };
                 var importedProfiles = JsonConvert.DeserializeObject<List<Profile>>(json, jsonSettings);
-                
+
                 if (importedProfiles == null || importedProfiles.Count == 0)
                 {
                     MessageBox.Show("No profiles found in the imported file.", "Import Failed");
                     return;
                 }
-                
+
                 CustomDialog dialog = new CustomDialog("Are you sure you, this will remove all current profiles?");
                 dialog.Owner = Application.Current.MainWindow;
                 dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -1983,7 +1983,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
             {
                 var fullInfo = new FileInfo(Path.GetFullPath(fullPath));
                 var baseInfo = new DirectoryInfo(Path.GetFullPath(basePath));
-                
+
                 // Check if file is within base directory
                 return fullInfo.FullName.StartsWith(
                     baseInfo.FullName + Path.DirectorySeparatorChar,
@@ -2005,7 +2005,7 @@ namespace Elite_Dangerous_Addon_Launcher_V2
 
             if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 return false;
-            
+
             // Only allow http/https for web URLs
             return uri.Scheme is "http" or "https";
         }
