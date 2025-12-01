@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.0.0-beta1] - 2025-12-01
+## [2.0.0-beta2] - 2025-12-01
 
 ### 🎉 Highlights
 - **Application Renamed**: "Elite Dangerous Addon Launcher V2" → **"EDData Addon Helper"**
@@ -143,7 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.github/workflows/build-release.yml` - CI/CD pipeline
 
 #### Build Output
-- **Installer**: `EDData-Addon-Helper-2.0.0-beta1.msi`
+- **Installer**: `EDData-Addon-Helper-2.0.0-beta2.msi`
 - **Size**: ~55 MiB (self-contained with .NET Runtime)
 - **Target**: Windows 10/11 x64
 
