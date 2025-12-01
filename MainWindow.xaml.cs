@@ -409,26 +409,62 @@ namespace Elite_Dangerous_Addon_Launcher_V2
         private void Btn_Edit_Click(object sender, RoutedEventArgs e)
         {
             Button button = (Button)sender;
-            MyApp appToEdit = button.CommandParameter as MyApp;
+            MyApp? appToEdit = button.CommandParameter as MyApp;
 
             if (appToEdit != null)
             {
-                string exePath = Path.Combine(appToEdit.Path, appToEdit.ExeName);
+                // Check if this is Elite Dangerous (by exe name or Steam URL)
+                bool isEliteDangerous = appToEdit.ExeName.Equals(AppConstants.EdLaunchExe, StringComparison.OrdinalIgnoreCase)
+                    || appToEdit.WebAppURL?.Equals("steam://rungameid/359320", StringComparison.OrdinalIgnoreCase) == true
+                    || appToEdit.Name.Contains("Elite Dangerous", StringComparison.OrdinalIgnoreCase);
 
-                if (appToEdit.ExeName.Equals(AppConstants.EdLaunchExe, StringComparison.OrdinalIgnoreCase)
-                    && IsEpicInstalled(exePath))
+                if (isEliteDangerous)
                 {
-                    // Open Legendary settings window instead of AddApp
-                    var legendarySettings = new Views.LegendarySettingsWindow
+                    // Show the Elite Launch Dialog for editing Elite Dangerous
+                    var launchDialog = new EliteLaunchDialog
                     {
                         Owner = this,
                         WindowStartupLocation = WindowStartupLocation.CenterOwner
                     };
-                    legendarySettings.ShowDialog();
+
+                    // Pre-set the launch options based on current settings
+                    if (!string.IsNullOrEmpty(appToEdit.Args))
+                    {
+                        launchDialog.ChkAutoRun.IsChecked = appToEdit.Args.Contains("/autorun", StringComparison.OrdinalIgnoreCase);
+                        launchDialog.ChkAutoQuit.IsChecked = appToEdit.Args.Contains("/autoexit", StringComparison.OrdinalIgnoreCase);
+                        launchDialog.ChkVRMode.IsChecked = appToEdit.Args.Contains("/vr", StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    if (launchDialog.ShowDialog() == true && launchDialog.Confirmed)
+                    {
+                        // Update the app based on dialog selection
+                        if (launchDialog.UseSteamUrl)
+                        {
+                            appToEdit.Name = "Elite Dangerous (Steam)";
+                            appToEdit.ExeName = string.Empty;
+                            appToEdit.Path = string.Empty;
+                            appToEdit.WebAppURL = "steam://rungameid/359320";
+                        }
+                        else if (!string.IsNullOrEmpty(launchDialog.SelectedPath))
+                        {
+                            string? edLaunchDir = Path.GetDirectoryName(launchDialog.SelectedPath);
+                            if (!string.IsNullOrEmpty(edLaunchDir))
+                            {
+                                appToEdit.Name = launchDialog.UseLegendary ? "Elite Dangerous (Epic/Legendary)" : "Elite Dangerous";
+                                appToEdit.ExeName = AppConstants.EdLaunchExe;
+                                appToEdit.Path = edLaunchDir;
+                                appToEdit.WebAppURL = string.Empty;
+                            }
+                        }
+
+                        appToEdit.Args = launchDialog.LaunchArguments;
+                        _ = SaveProfilesAsync().ConfigureAwait(false);
+                        Log.Information("Updated Elite Dangerous settings");
+                    }
                     return;
                 }
 
-                // Fallback: regular AddApp editing
+                // Fallback: regular AddApp editing for non-Elite apps
                 AddApp addAppWindow = new AddApp
                 {
                     AppToEdit = appToEdit,
