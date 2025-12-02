@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Localization test suite in `Tests/LocalizationTests.cs`
 - Ready for Weblate integration (monolingual RESX format)
 
+### 🐛 Bug Fixes
+
+- Fixed `steam://` URL scheme being rejected as "invalid or unsafe URL"
+- Steam game launches now work correctly with proper protocol handler support
+
 ---
 
 ## [2.0.0-beta2] - 2025-12-01
