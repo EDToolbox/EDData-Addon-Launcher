@@ -89,8 +89,16 @@
                 <CheckBox x:Name="CloseAllAppsCheckbox" Content="Close apps on Exit"
                           DataContext="{x:Static local:AppState.Instance}"
                           IsChecked="{Binding CloseAllApps, Mode=TwoWay}" Checked="CloseAllAppsCheckbox_Checked_1" Unchecked ="CloseAllAppsCheckbox_Unchecked_1"
-                           
-                          />
+                          Margin="0,0,20,0"/>
+                
+                <TextBlock Text="Language:" VerticalAlignment="Center" Margin="0,0,5,0" />
+                <ComboBox x:Name="Cb_Language" 
+                          Width="120"
+                          SelectionChanged="Cb_Language_SelectionChanged">
+                    <ComboBoxItem Tag="auto" Content="System" IsSelected="True" />
+                    <ComboBoxItem Tag="en" Content="English" />
+                    <ComboBoxItem Tag="de" Content="Deutsch" />
+                </ComboBox>
             </StackPanel>
         </StackPanel>
 

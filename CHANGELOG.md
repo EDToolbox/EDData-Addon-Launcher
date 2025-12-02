@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Localization test suite in `Tests/LocalizationTests.cs`
 - Ready for Weblate integration (monolingual RESX format)
 
+#### Language Selection
+- Added language selector dropdown in main window (System/English/Deutsch)
+- Language preference is saved and persisted across sessions
+- "System" option automatically uses the operating system's language
+
 ### 🐛 Bug Fixes
 
 - Fixed `steam://` URL scheme being rejected as "invalid or unsafe URL"

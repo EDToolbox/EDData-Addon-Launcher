@@ -956,6 +956,8 @@ namespace Elite_Dangerous_Addon_Launcher_V2
             settings = await LoadSettingsAsync();
             isDarkTheme = settings.Theme == "Dark";
             ApplyTheme(settings.Theme);
+            ApplyLanguage(settings.Language);
+            SelectLanguageInComboBox(settings.Language);
             AppState.Instance.CloseAllAppsOnExit = settings.CloseAllAppsOnExit;
 
             // Check if there are no profiles and invoke AddProfileDialog if none exist
@@ -1162,6 +1164,53 @@ namespace Elite_Dangerous_Addon_Launcher_V2
                 System.Diagnostics.Debug.WriteLine($" - {dictionary.Source}");
             }
             _ = SaveSettingsAsync(settings);
+        }
+
+        private void Cb_Language_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isLoading || Cb_Language.SelectedItem is not ComboBoxItem selectedItem)
+                return;
+
+            string languageTag = selectedItem.Tag?.ToString() ?? "auto";
+            ApplyLanguage(languageTag);
+            settings.Language = languageTag;
+            _ = SaveSettingsAsync(settings);
+            
+            // Show restart hint using localized strings
+            MessageBox.Show(
+                Localization.Strings.Get("Message_LanguageChanged"),
+                Localization.Strings.Get("Message_LanguageChangedTitle"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        private void ApplyLanguage(string languageTag)
+        {
+            string cultureName;
+            if (languageTag == "auto")
+            {
+                // Use system culture
+                cultureName = System.Globalization.CultureInfo.InstalledUICulture.TwoLetterISOLanguageName;
+            }
+            else
+            {
+                cultureName = languageTag;
+            }
+
+            Localization.Strings.SetCulture(cultureName);
+            Log.Information("Language set to: {Language} (tag: {Tag})", cultureName, languageTag);
+        }
+
+        private void SelectLanguageInComboBox(string languageTag)
+        {
+            foreach (ComboBoxItem item in Cb_Language.Items)
+            {
+                if (item.Tag?.ToString() == languageTag)
+                {
+                    Cb_Language.SelectedItem = item;
+                    break;
+                }
+            }
         }
 
         private void UnsubscribeFromAppEvents(Profile profile)

@@ -13,6 +13,16 @@
             set => _theme = value ?? AppConstants.DefaultTheme;
         }
 
+        private string _language = "auto";
+        /// <summary>
+        /// The application language. "auto" = system language, or specific culture code like "en", "de"
+        /// </summary>
+        public string Language
+        {
+            get => _language;
+            set => _language = value ?? "auto";
+        }
+
         #endregion Public Properties
     }
 }

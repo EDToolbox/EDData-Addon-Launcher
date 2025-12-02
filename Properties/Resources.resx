@@ -313,4 +313,24 @@
     <value>Warning</value>
   </data>
 
+  <!-- Language Selection -->
+  <data name="MainWindow_Language" xml:space="preserve">
+    <value>Language:</value>
+  </data>
+  <data name="Language_System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="Language_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Language_German" xml:space="preserve">
+    <value>Deutsch</value>
+  </data>
+  <data name="Message_LanguageChanged" xml:space="preserve">
+    <value>Language changed. Some UI elements may require a restart to fully update.</value>
+  </data>
+  <data name="Message_LanguageChangedTitle" xml:space="preserve">
+    <value>Language Changed</value>
+  </data>
+
 </root>
